@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>足球之音 - 音乐盒</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <!-- GSAP 动画库 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1a365d', // 深蓝色
+                        secondary: '#ecc94b', // 金色
+                        dark: '#0f172a',
+                        light: '#f8fafc'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                    animation: {
+                        'bounce-slow': 'bounce 3s infinite',
+                        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .text-shadow {
+                text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            }
+            .text-shadow-lg {
+                text-shadow: 4px 4px 8px rgba(0, 0, 0, 0.5);
+            }
+            .glass {
+                background: rgba(255, 255, 255, 0.25);
+                backdrop-filter: blur(10px);
+                -webkit-backdrop-filter: blur(10px);
+                border: 1px solid rgba(255, 255, 255, 0.18);
+            }
+            .glass-dark {
+                background: rgba(15, 23, 42, 0.75);
+                backdrop-filter: blur(10px);
+                -webkit-backdrop-filter: blur(10px);
+                border: 1px solid rgba(255, 255, 255, 0.08);
+            }
+            .vinyl-record {
+                background: radial-gradient(circle, #000000 0%, #1a1a1a 80%, #000000 100%);
+                position: relative;
+                overflow: hidden;
+            }
+            .vinyl-record::after {
+                content: '';
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                width: 20%;
+                height: 20%;
+                background: radial-gradient(circle, #ffffff 0%, #e0e0e0 70%, #ffffff 100%);
+                border-radius: 50%;
+            }
+            .vinyl-record::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: repeating-radial-gradient(
+                    circle at center,
+                    rgba(255, 255, 255, 0.1) 0px,
+                    rgba(255, 255, 255, 0.1) 1px,
+                    transparent 1px,
+                    transparent 4px
+                );
+                border-radius: 50%;
+            }
+            .rotate-record {
+                animation: rotate 10s linear infinite;
+            }
+            @keyframes rotate {
+                from { transform: rotate(0deg); }
+                to { transform: rotate(360deg); }
+            }
+            .music-note {
+                animation: float 3s ease-in-out infinite;
+            }
+            @keyframes float {
+                0%, 100% { transform: translateY(0); }
+                50% { transform: translateY(-10px); }
+            }
+            .button-3d {
+                transform-style: preserve-3d;
+                transform: perspective(1000px);
+                transition: all 0.3s ease;
+            }
+            .button-3d::before {
+                content: '';
+                position: absolute;
+                width: 100%;
+                height: 100%;
+                left: 0;
+                bottom: -4px;
+                background: rgba(0, 0, 0, 0.2);
+                transform: translateZ(-1px);
+                border-radius: inherit;
+            }
+            .button-3d:active {
+                transform: perspective(1000px) translateZ(-2px);
+            }
+            .button-3d:active::before {
+                bottom: -2px;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-dark to-primary min-h-screen flex flex-col items-center justify-center p-4 text-light">
+    <!-- 顶部标题 -->
+    <header class="w-full max-w-md text-center mb-8">
+        <h1 class="text-4xl md:text-5xl font-bold text-secondary text-shadow-lg mb-2">足球之音</h1>
+        <p class="text-lg text-gray-300">音乐与足球的完美融合</p>
+    </header>
+
+    <!-- 主内容区 -->
+    <main class="w-full max-w-md flex flex-col items-center">
+        <!-- Logo区域 -->
+        <div class="relative w-64 h-64 mb-8">
+            <!-- Logo -->
+            <img src="https://p11-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/a03c3d688224432982616b824d511d78.png~tplv-a9rns2rl98-24:720:720.png?lk3s=8e244e95&rcl=2026042620204495A6CF86820F3E623114&rrcfp=8a172a1a&x-expires=1777810845&x-signature=kxNiARKhjBR8tFk2AFF%2Btvp%2Fesg%3D" 
+                 alt="足球之音" 
+                 class="w-full h-full object-contain z-10 relative animate-pulse-slow">
+            
+            <!-- 音乐符号装饰 -->
+            <div class="absolute -top-4 -right-4 text-secondary text-2xl music-note">
+                <i class="fa fa-music"></i>
+            </div>
+            <div class="absolute -bottom-4 -left-4 text-secondary text-2xl music-note" style="animation-delay: 1s;">
+                <i class="fa fa-music"></i>
+            </div>
+        </div>
+
+        <!-- 音乐盒控制面板 -->
+        <div class="glass-dark rounded-2xl p-6 w-full mb-8 shadow-xl">
+            <!-- 唱片可视化 -->
+            <div class="flex justify-center mb-6">
+                <div id="vinyl-record" class="vinyl-record w-32 h-32 rounded-full shadow-2xl"></div>
+            </div>
+            
+            <!-- 控制按钮 -->
+            <div class="grid grid-cols-3 gap-4 mb-6">
+                <button id="btn-prev" class="button-3d relative bg-secondary hover:bg-yellow-500 text-primary font-bold py-3 px-4 rounded-full shadow-lg transition-all duration-300 flex items-center justify-center">
+                    <i class="fa fa-step-backward"></i>
+                </button>
+                <button id="btn-play" class="button-3d relative bg-secondary hover:bg-yellow-500 text-primary font-bold py-3 px-4 rounded-full shadow-lg transition-all duration-300 flex items-center justify-center">
+                    <i class="fa fa-play"></i>
+                </button>
+                <button id="btn-next" class="button-3d relative bg-secondary hover:bg-yellow-500 text-primary font-bold py-3 px-4 rounded-full shadow-lg transition-all duration-300 flex items-center justify-center">
+                    <i class="fa fa-step-forward"></i>
+                </button>
+            </div>
+            
+            <!-- 进度条 -->
+            <div class="w-full bg-gray-700 rounded-full h-2.5 mb-4">
+                <div id="progress-bar" class="bg-secondary h-2.5 rounded-full" style="width: 0%"></div>
+            </div>
+            
+            <!-- 时间显示 -->
+            <div class="flex justify-between text-sm text-gray-300">
+                <span id="current-time">00:00</span>
+                <span id="total-time">03:30</span>
+            </div>
+        </div>
+
+        <!-- 对话区域 -->
+        <div class="glass-dark rounded-2xl p-6 w-full shadow-xl">
+            <h2 class="text-xl font-bold mb-4 text-secondary flex items-center">
+                <i class="fa fa-comments mr-2"></i> 足球对话
+            </h2>
+            
+            <!-- 对话内容区域 -->
+            <div id="chat-container" class="bg-dark bg-opacity-50 rounded-xl p-4 h-48 overflow-y-auto mb-4">
+                <!-- 对话内容将通过JavaScript动态添加 -->
+                <div class="flex mb-4">
+                    <div class="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center mr-2 flex-shrink-0">
+                        <i class="fa fa-user"></i>
+                    </div>
+                    <div class="bg-blue-600 rounded-lg py-2 px-3 max-w-[80%]">
+                        <p>你好！欢迎来到足球之音！</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 对话按钮 -->
+            <div class="grid grid-cols-2 gap-4">
+                <button id="btn-convo1" class="button-3d relative bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-lg transition-all duration-300">
+                    讨论比赛
+                </button>
+                <button id="btn-convo2" class="button-3d relative bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg shadow-lg transition-all duration-300">
+                    球员故事
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="w-full max-w-md text-center mt-8 text-gray-400 text-sm">
+        <p>© 2026 足球之音 | 音乐与足球的完美融合</p>
+    </footer>
+    
+    <!-- 音频元素 - 支持多种格式 -->
+    <audio id="audio-player" preload="metadata">
+        <source id="audio-mp3" src="" type="audio/mpeg">
+        <source id="audio-wav" src="" type="audio/wav">
+        <source id="audio-ogg" src="" type="audio/ogg">
+        <source id="audio-aac" src="" type="audio/aac">
+        您的浏览器不支持音频元素。请更新浏览器版本。
+    </audio>
+
+    <script>
+        // 页面加载完成后执行
+        document.addEventListener('DOMContentLoaded', function() {
+            // 获取DOM元素
+            const btnPlay = document.getElementById('btn-play');
+            const btnPrev = document.getElementById('btn-prev');
+            const btnNext = document.getElementById('btn-next');
+            const btnConvo1 = document.getElementById('btn-convo1');
+            const btnConvo2 = document.getElementById('btn-convo2');
+            const vinylRecord = document.getElementById('vinyl-record');
+            const progressBar = document.getElementById('progress-bar');
+            const currentTime = document.getElementById('current-time');
+            const chatContainer = document.getElementById('chat-container');
+            
+            // 状态变量
+            let isPlaying = false;
+            let progressInterval;
+            let currentProgress = 0;
+            
+            // 播放列表 - 用户已添加的音频
+            const playlist = [
+                {
+                    title: "拉齐奥 VS 乌迪内斯",
+                    artist: "山人体彩",
+                    url: "https://dgtgvtkje-1322279949.cos.ap-chongqing.myqcloud.com/%E8%A5%BF%E7%94%B2%E8%A5%BF%E7%8F%AD%E7%89%99%E4%BA%BA%2BVS%2B%E8%8E%B1%E4%B8%87%E7%89%B9%E5%89%8D%E7%9E%BB.wav"
+                }
+            ];
+            
+            let currentTrackIndex = 0;
+            let audioPlayer = document.getElementById('audio-player');
+            
+            // 初始化音频播放器
+            function initAudioPlayer() {
+                if (playlist.length > 0) {
+                    loadTrack(0);
+                    showNotification(`已加载音频: ${playlist[0].title}`);
+                } else {
+                    showNotification('播放列表为空，请添加音频文件');
+                }
+            }
+            
+            // 加载音频曲目 - 支持多种格式
+            function loadTrack(index) {
+                const track = playlist[index];
+                console.log('Loading track:', track.title, 'URL:', track.url);
+                
+                // 显示加载中提示
+                showNotification(`正在加载: ${track.title}...`);
+                
+                // 获取文件扩展名
+                const fileExtension = track.url.split('.').pop().toLowerCase();
+                console.log('File extension:', fileExtension);
+                
+                // 重置所有source标签
+                document.getElementById('audio-mp3').src = '';
+                document.getElementById('audio-wav').src = '';
+                document.getElementById('audio-ogg').src = '';
+                document.getElementById('audio-aac').src = '';
+                
+                // 根据文件扩展名设置对应的source
+                switch(fileExtension) {
+                    case 'mp3':
+                        document.getElementById('audio-mp3').src = track.url;
+                        break;
+                    case 'wav':
+                        document.getElementById('audio-wav').src = track.url;
+                        break;
+                    case 'ogg':
+                        document.getElementById('audio-ogg').src = track.url;
+                        break;
+                    case 'aac':
+                        document.getElementById('audio-aac').src = track.url;
+                        break;
+                    default:
+                        // 如果扩展名不明确，尝试所有格式
+                        document.getElementById('audio-mp3').src = track.url;
+                        console.log('Unknown format, trying as MP3 first');
+                }
+                
+                // 监听加载事件
+                audioPlayer.addEventListener('loadedmetadata', function onMetadataLoaded() {
+                    console.log('Metadata loaded - Duration:', audioPlayer.duration);
+                    
+                    // 更新总时长显示
+                    const totalSeconds = Math.floor(audioPlayer.duration);
+                    const totalMinutes = Math.floor(totalSeconds / 60);
+                    const totalSecs = totalSeconds % 60;
+                    
+                    document.getElementById('total-time').textContent = 
+                        (totalMinutes < 10 ? '0' : '') + totalMinutes + ':' + 
+                        (totalSecs < 10 ? '0' : '') + totalSecs;
+                    
+                    showNotification(`已加载: ${track.title} (${document.getElementById('total-time').textContent})`);
+                }, { once: true });
+                
+                // 监听加载错误
+                audioPlayer.addEventListener('error', function onLoadError() {
+                    console.error('Failed to load track:', audioPlayer.error);
+                    showNotification('加载失败: ' + getAudioErrorMessage(audioPlayer.error));
+                    
+                    // 尝试其他格式（如果当前格式失败）
+                    if (fileExtension !== 'mp3') {
+                        setTimeout(() => {
+                            showNotification('尝试以MP3格式加载...');
+                            document.getElementById('audio-mp3').src = track.url;
+                            document.getElementById('audio-wav').src = '';
+                            document.getElementById('audio-ogg').src = '';
+                            document.getElementById('audio-aac').src = '';
+                            audioPlayer.load();
+                        }, 2000);
+                    }
+                }, { once: true });
+                
+                // 开始加载
+                audioPlayer.load();
+                
+                // 更新页面标题
+                document.title = `足球之音 - ${track.title}`;
+                
+                // 重置进度条
+                progressBar.style.width = '0%';
+                currentTime.textContent = '00:00';
+            }
+            
+            // 对话数据
+            const conversations = {
+                match: [
+                    {
+                        speaker: 'user',
+                        text: '最近有什么精彩的足球比赛吗？'
+                    },
+                    {
+                        speaker: 'host',
+                        text: '当然！最近的欧冠决赛真是精彩绝伦，皇马以1-0击败了多特蒙德，夺得了队史第15座欧冠冠军！'
+                    },
+                    {
+                        speaker: 'user',
+                        text: '哇！进球的是谁？'
+                    },
+                    {
+                        speaker: 'host',
+                        text: '是维尼修斯在第79分钟打入了制胜球！这个进球展现了他出色的个人能力。'
+                    }
+                ],
+                player: [
+                    {
+                        speaker: 'user',
+                        text: '能给我讲讲梅西的故事吗？'
+                    },
+                    {
+                        speaker: 'host',
+                        text: '莱昂内尔·梅西被誉为足球史上最伟大的球员之一。他出生于阿根廷，早年加入巴塞罗那青训，17岁首次代表一线队出场，从此开始了传奇生涯。'
+                    },
+                    {
+                        speaker: 'user',
+                        text: '他获得过哪些重要荣誉？'
+                    },
+                    {
+                        speaker: 'host',
+                        text: '梅西曾7次获得金球奖，4次欧冠冠军，10次西甲冠军，还有2022年世界杯冠军！他的职业生涯充满了纪录和荣誉。'
+                    }
+                ]
+            };
+            
+            // 播放/暂停功能
+            btnPlay.addEventListener('click', function() {
+                isPlaying = !isPlaying;
+                
+                if (isPlaying) {
+                    // 开始播放
+                    btnPlay.innerHTML = '<i class="fa fa-pause"></i>';
+                    vinylRecord.classList.add('rotate-record');
+                    
+                    // 播放音频
+                    togglePlay();
+                } else {
+                    // 暂停播放
+                    btnPlay.innerHTML = '<i class="fa fa-play"></i>';
+                    vinylRecord.classList.remove('rotate-record');
+                    
+                    // 暂停音频
+                    togglePlay();
+                }
+            });
+            
+            // 上一首按钮
+            btnPrev.addEventListener('click', function() {
+                // 添加按钮点击效果
+                addButtonEffect(btnPrev);
+                
+                if (playlist.length > 0) {
+                    // 计算上一首索引
+                    currentTrackIndex = (currentTrackIndex - 1 + playlist.length) % playlist.length;
+                    
+                    // 加载并播放上一首
+                    loadTrack(currentTrackIndex);
+                    
+                    if (isPlaying) {
+                        audioPlayer.play().catch(error => {
+                            console.error('播放失败:', error);
+                            showNotification('播放失败，请检查音频链接');
+                        });
+                    }
+                    
+                    // 显示提示
+                    showNotification(`已切换到: ${playlist[currentTrackIndex].title}`);
+                } else {
+                    showNotification('播放列表为空');
+                }
+            });
+            
+            // 下一首按钮
+            btnNext.addEventListener('click', function() {
+                // 添加按钮点击效果
+                addButtonEffect(btnNext);
+                
+                if (playlist.length > 0) {
+                    // 计算下一首索引
+                    currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
+                    
+                    // 加载并播放下一首
+                    loadTrack(currentTrackIndex);
+                    
+                    if (isPlaying) {
+                        audioPlayer.play().catch(error => {
+                            console.error('播放失败:', error);
+                            showNotification('播放失败，请检查音频链接');
+                        });
+                    }
+                    
+                    // 显示提示
+                    showNotification(`已切换到: ${playlist[currentTrackIndex].title}`);
+                } else {
+                    showNotification('播放列表为空');
+                }
+            });
+            
+            // 对话按钮1 - 讨论比赛
+            btnConvo1.addEventListener('click', function() {
+                // 添加按钮点击效果
+                addButtonEffect(btnConvo1);
+                
+                // 显示对话
+                displayConversation('match');
+            });
+            
+            // 对话按钮2 - 球员故事
+            btnConvo2.addEventListener('click', function() {
+                // 添加按钮点击效果
+                addButtonEffect(btnConvo2);
+                
+                // 显示对话
+                displayConversation('player');
+            });
+            
+            // 进度条更新函数
+            function startProgress() {
+                // 清除之前的定时器
+                stopProgress();
+                
+                // 设置新的定时器
+                progressInterval = setInterval(function() {
+                    currentProgress += 0.5;
+                    
+                    if (currentProgress >= 100) {
+                        // 重置进度
+                        resetProgress();
+                        
+                        // 如果启用了自动播放下一首
+                        if (isPlaying) {
+                            // 模拟切换到下一首
+                            btnNext.click();
+                        }
+                    } else {
+                        // 更新进度条
+                        progressBar.style.width = currentProgress + '%';
+                        
+                        // 更新时间显示
+                        updateTimeDisplay();
+                    }
+                }, 100);
+            }
+            
+            // 停止进度更新
+            function stopProgress() {
+                clearInterval(progressInterval);
+            }
+            
+            // 重置进度
+            function resetProgress() {
+                currentProgress = 0;
+                progressBar.style.width = '0%';
+                currentTime.textContent = '00:00';
+            }
+            
+            // 更新时间显示
+            function updateTimeDisplay() {
+                // 总时长（秒）
+                const totalSeconds = 210; // 3:30
+                
+                // 当前时间（秒）
+                const currentSeconds = Math.floor(totalSeconds * (currentProgress / 100));
+                
+                // 格式化时间
+                const currentMinutes = Math.floor(currentSeconds / 60);
+                const currentSecs = currentSeconds % 60;
+                
+                // 更新显示
+                currentTime.textContent = 
+                    (currentMinutes < 10 ? '0' : '') + currentMinutes + ':' + 
+                    (currentSecs < 10 ? '0' : '') + currentSecs;
+            }
+            
+            // 显示对话
+            function displayConversation(type) {
+                // 清空对话区域
+                chatContainer.innerHTML = '';
+                
+                // 获取对话数据
+                const convo = conversations[type];
+                
+                // 逐个添加对话
+                convo.forEach((message, index) => {
+                    setTimeout(() => {
+                        addMessage(message.speaker, message.text);
+                        
+                        // 滚动到底部
+                        chatContainer.scrollTop = chatContainer.scrollHeight;
+                    }, index * 800);
+                });
+            }
+            
+            // 添加消息到对话区域
+            function addMessage(speaker, text) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'flex mb-4 ' + (speaker === 'user' ? 'justify-end' : '');
+                
+                if (speaker === 'user') {
+                    // 用户消息
+                    messageDiv.innerHTML = `
+                        <div class="bg-blue-600 rounded-lg py-2 px-3 max-w-[80%]">
+                            <p>${text}</p>
+                        </div>
+                        <div class="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center ml-2 flex-shrink-0">
+                            <i class="fa fa-user"></i>
+                        </div>
+                    `;
+                } else {
+                    // 主持人消息
+                    messageDiv.innerHTML = `
+                        <div class="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center mr-2 flex-shrink-0">
+                            <i class="fa fa-microphone"></i>
+                        </div>
+                        <div class="bg-green-600 rounded-lg py-2 px-3 max-w-[80%]">
+                            <p>${text}</p>
+                        </div>
+                    `;
+                }
+                
+                chatContainer.appendChild(messageDiv);
+            }
+            
+            // 添加按钮点击效果
+            function addButtonEffect(button) {
+                // 创建波纹效果
+                const ripple = document.createElement('span');
+                ripple.className = 'absolute top-1/2 left-1/2 w-0 h-0 rounded-full bg-white bg-opacity-30 transform -translate-x-1/2 -translate-y-1/2 transition-all duration-500';
+                button.appendChild(ripple);
+                
+                // 设置波纹大小
+                setTimeout(() => {
+                    ripple.style.width = '100px';
+                    ripple.style.height = '100px';
+                }, 10);
+                
+                // 移除波纹
+                setTimeout(() => {
+                    ripple.remove();
+                }, 600);
+            }
+            
+            // 显示通知
+            function showNotification(text) {
+                // 创建通知元素
+                const notification = document.createElement('div');
+                notification.className = 'fixed top-4 right-4 bg-secondary text-primary px-4 py-2 rounded-lg shadow-lg z-50 transform translate-x-full transition-transform duration-300';
+                notification.textContent = text;
+                document.body.appendChild(notification);
+                
+                // 显示通知
+                setTimeout(() => {
+                    notification.classList.remove('translate-x-full');
+                }, 10);
+                
+                // 隐藏通知
+                setTimeout(() => {
+                    notification.classList.add('translate-x-full');
+                    
+                    // 移除元素
+                    setTimeout(() => {
+                        notification.remove();
+                    }, 300);
+                }, 2000);
+            }
+            
+            // 播放/暂停音频
+            function togglePlay() {
+                console.log('togglePlay called, isPlaying:', isPlaying);
+                console.log('Current audio src:', audioPlayer.src);
+                
+                // 检查音频元素状态
+                console.log('Audio readyState:', audioPlayer.readyState);
+                console.log('Audio networkState:', audioPlayer.networkState);
+                
+                if (audioPlayer.src === '') {
+                    // 如果没有音频源，尝试加载第一首
+                    if (playlist.length > 0) {
+                        console.log('Loading first track:', playlist[0].title);
+                        loadTrack(0);
+                    } else {
+                        showNotification('播放列表为空，请添加音频文件');
+                        isPlaying = false;
+                        btnPlay.innerHTML = '<i class="fa fa-play"></i>';
+                        return;
+                    }
+                }
+                
+                try {
+                    if (isPlaying) {
+                        console.log('Pausing audio');
+                        audioPlayer.pause();
+                    } else {
+                        console.log('Trying to play audio');
+                        
+                        // 检查音频是否已加载
+                        if (audioPlayer.readyState < 1) {
+                            console.log('Audio not loaded yet, trying to load');
+                            audioPlayer.load();
+                            
+                            // 等待加载完成后播放
+                            audioPlayer.addEventListener('canplay', function playWhenReady() {
+                                console.log('Audio can play now');
+                                audioPlayer.play().catch(error => {
+                                    console.error('播放失败:', error);
+                                    showNotification('播放失败: ' + error.message);
+                                    isPlaying = false;
+                                    btnPlay.innerHTML = '<i class="fa fa-play"></i>';
+                                });
+                                // 移除事件监听器，避免重复触发
+                                audioPlayer.removeEventListener('canplay', playWhenReady);
+                            }, { once: true });
+                            
+                            // 监听加载错误
+                            audioPlayer.addEventListener('error', function onError() {
+                                console.error('Audio loading error:', audioPlayer.error);
+                                showNotification('音频加载失败: ' + getAudioErrorMessage(audioPlayer.error));
+                                isPlaying = false;
+                                btnPlay.innerHTML = '<i class="fa fa-play"></i>';
+                            }, { once: true });
+                        } else {
+                            // 音频已加载，直接播放
+                            audioPlayer.play().catch(error => {
+                                console.error('播放失败:', error);
+                                showNotification('播放失败: ' + error.message);
+                                isPlaying = false;
+                                btnPlay.innerHTML = '<i class="fa fa-play"></i>';
+                            });
+                        }
+                    }
+                } catch (error) {
+                    console.error('音频操作错误:', error);
+                    showNotification('音频操作失败: ' + error.message);
+                }
+            }
+            
+            // 获取音频错误信息
+            function getAudioErrorMessage(error) {
+                if (!error) return '未知错误';
+                
+                const errorMessages = {
+                    1: '用户中止了获取过程',
+                    2: '网络错误',
+                    3: '解码错误',
+                    4: '音频格式不支持',
+                    5: '音频无法使用'
+                };
+                
+                return errorMessages[error.code] || '未知错误 (' + error.code + ')';
+            }
+            
+            // 音频进度更新
+            function updateAudioProgress() {
+                if (audioPlayer.duration) {
+                    // 计算进度百分比
+                    currentProgress = (audioPlayer.currentTime / audioPlayer.duration) * 100;
+                    
+                    // 更新进度条
+                    progressBar.style.width = currentProgress + '%';
+                    
+                    // 更新时间显示
+                    const currentSeconds = Math.floor(audioPlayer.currentTime);
+                    const currentMinutes = Math.floor(currentSeconds / 60);
+                    const currentSecs = currentSeconds % 60;
+                    
+                    currentTime.textContent = 
+                        (currentMinutes < 10 ? '0' : '') + currentMinutes + ':' + 
+                        (currentSecs < 10 ? '0' : '') + currentSecs;
+                    
+                    console.log('Progress update - Time:', currentTime.textContent, 'Progress:', currentProgress.toFixed(2) + '%');
+                } else {
+                    console.log('No duration available');
+                }
+            }
+            
+            // 如何添加音频指南
+            function showAudioGuide() {
+                const guide = `
+                <div class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
+                    <div class="bg-dark rounded-xl p-6 max-w-md w-full">
+                        <h3 class="text-xl font-bold text-secondary mb-4">如何添加音频</h3>
+                        <div class="mb-4">
+                            <p class="mb-2">要链接您的音频文件，请按照以下步骤操作：</p>
+                            <ol class="list-decimal pl-5 space-y-2">
+                                <li>准备好您的音频文件（MP3格式推荐）</li>
+                                <li>将音频文件上传到可公开访问的服务器或云存储</li>
+                                <li>获取音频文件的直接URL链接</li>
+                                <li>在代码中找到playlist数组</li>
+                                <li>将您的音频URL替换示例链接</li>
+                            </ol>
+                        </div>
+                        <div class="bg-gray-800 p-3 rounded-lg mb-4 text-sm">
+                            <code>const playlist = [
+  {
+    title: "巴黎圣日耳曼+vs+拜仁慕尼黑",
+    artist: "山人体彩",
+    url: "hhttps://https://pan.baidu.com/s/1yw5uektSr_KdwiMboaHh3"
+  }
+];</code>
+                        </div>
+                        <div class="mb-4">
+                            <h4 class="font-bold text-secondary mb-2">支持的音频格式：</h4>
+                            <div class="grid grid-cols-2 gap-2 mb-2">
+                                <span class="bg-green-800 text-white px-2 py-1 rounded text-xs">MP3 (.mp3)</span>
+                                <span class="bg-blue-800 text-white px-2 py-1 rounded text-xs">WAV (.wav)</span>
+                                <span class="bg-purple-800 text-white px-2 py-1 rounded text-xs">OGG (.ogg)</span>
+                                <span class="bg-yellow-800 text-white px-2 py-1 rounded text-xs">AAC (.aac)</span>
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <h4 class="font-bold text-secondary mb-2">常见问题：</h4>
+                            <ul class="list-disc pl-5 space-y-1 text-sm">
+                                <li>确保音频链接可以直接访问（非私有链接）</li>
+                                <li>确认服务器允许跨域访问（CORS）</li>
+                                <li>检查文件扩展名是否正确</li>
+                                <li>尝试在新标签页中打开音频链接测试</li>
+                                <li>如果一种格式失败，系统会自动尝试MP3格式</li>
+                            </ul>
+                        </div>
+                        <div class="text-center">
+                            <button id="test-audio" class="bg-green-600 text-white font-bold py-2 px-4 rounded-lg mb-2 w-full">
+                                测试当前音频链接
+                            </button>
+                            <button id="close-guide" class="bg-secondary text-primary font-bold py-2 px-4 rounded-lg w-full">
+                                我知道了
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                `;
+                
+                document.body.insertAdjacentHTML('beforeend', guide);
+                
+                // 添加关闭按钮事件
+                document.getElementById('close-guide').addEventListener('click', function() {
+                    this.closest('.fixed').remove();
+                });
+                
+                // 添加测试音频按钮事件 - 支持多格式测试
+                document.getElementById('test-audio').addEventListener('click', function() {
+                    if (playlist.length > 0) {
+                        const track = playlist[0];
+                        const fileExtension = track.url.split('.').pop().toLowerCase();
+                        
+                        showNotification(`正在测试 ${fileExtension.toUpperCase()} 格式...`);
+                        
+                        // 创建测试音频元素
+                        const testAudio = document.createElement('audio');
+                        
+                        // 根据文件扩展名设置类型
+                        switch(fileExtension) {
+                            case 'mp3':
+                                testAudio.type = 'audio/mpeg';
+                                break;
+                            case 'wav':
+                                testAudio.type = 'audio/wav';
+                                break;
+                            case 'ogg':
+                                testAudio.type = 'audio/ogg';
+                                break;
+                            case 'aac':
+                                testAudio.type = 'audio/aac';
+                                break;
+                        }
+                        
+                        testAudio.src = track.url;
+                        
+                        // 测试播放
+                        testAudio.play().then(() => {
+                            showNotification(`✓ ${fileExtension.toUpperCase()} 格式测试成功！可以播放`);
+                            testAudio.pause();
+                            testAudio.src = '';
+                        }).catch(error => {
+                            console.error('音频测试失败:', error);
+                            showNotification(`✗ ${fileExtension.toUpperCase()} 格式测试失败: ${error.message}`);
+                            
+                            // 如果失败，尝试作为MP3播放
+                            if (fileExtension !== 'mp3') {
+                                setTimeout(() => {
+                                    showNotification('尝试以MP3格式测试...');
+                                    const mp3TestAudio = new Audio();
+                                    mp3TestAudio.type = 'audio/mpeg';
+                                    mp3TestAudio.src = track.url;
+                                    
+                                    mp3TestAudio.play().then(() => {
+                                        showNotification('✓ MP3格式测试成功！可以播放');
+                                        mp3TestAudio.pause();
+                                        mp3TestAudio.src = '';
+                                    }).catch(mp3Error => {
+                                        console.error('MP3格式测试也失败:', mp3Error);
+                                        showNotification(`✗ MP3格式测试也失败: ${mp3Error.message}`);
+                                    });
+                                }, 2000);
+                            }
+                        });
+                    } else {
+                        showNotification('播放列表为空');
+                    }
+                });
+            }
+            
+            // 添加音频指南按钮
+            const audioGuideBtn = document.createElement('button');
+            audioGuideBtn.className = 'fixed bottom-4 right-4 bg-secondary text-primary w-12 h-12 rounded-full shadow-lg flex items-center justify-center z-40';
+            audioGuideBtn.innerHTML = '<i class="fa fa-question"></i>';
+            audioGuideBtn.title = '如何添加音频';
+            audioGuideBtn.addEventListener('click', showAudioGuide);
+            document.body.appendChild(audioGuideBtn);
+            
+            // 监听音频事件
+            // audioPlayer 已在前面定义
+            
+            // 进度更新事件
+            audioPlayer.addEventListener('timeupdate', updateAudioProgress);
+            
+            // 播放开始事件
+            audioPlayer.addEventListener('play', function() {
+                console.log('Audio started playing');
+                vinylRecord.classList.add('rotate-record');
+            });
+            
+            // 暂停事件
+            audioPlayer.addEventListener('pause', function() {
+                console.log('Audio paused');
+                vinylRecord.classList.remove('rotate-record');
+            });
+            
+            // 播放结束事件
+            audioPlayer.addEventListener('ended', function() {
+                console.log('Audio ended');
+                isPlaying = false;
+                btnPlay.innerHTML = '<i class="fa fa-play"></i>';
+                vinylRecord.classList.remove('rotate-record');
+                progressBar.style.width = '0%';
+                currentTime.textContent = '00:00';
+            });
+            
+            // 加载开始事件
+            audioPlayer.addEventListener('loadstart', function() {
+                console.log('Audio loading started');
+            });
+            
+            // 可以播放事件
+            audioPlayer.addEventListener('canplay', function() {
+                console.log('Audio can play');
+            });
+            
+            // 等待事件
+            audioPlayer.addEventListener('waiting', function() {
+                console.log('Audio waiting for data');
+            });
+            
+            // 缓冲事件
+            audioPlayer.addEventListener('progress', function() {
+                if (audioPlayer.buffered.length > 0) {
+                    const bufferedEnd = audioPlayer.buffered.end(audioPlayer.buffered.length - 1);
+                    const duration = audioPlayer.duration;
+                    if (duration > 0) {
+                        const bufferedPercent = (bufferedEnd / duration) * 100;
+                        console.log('Buffered:', bufferedPercent.toFixed(2) + '%');
+                    }
+                }
+            });
+            
+            audioPlayer.addEventListener('loadedmetadata', function() {
+                // 更新总时长显示
+                const totalSeconds = Math.floor(audioPlayer.duration);
+                const totalMinutes = Math.floor(totalSeconds / 60);
+                const totalSecs = totalSeconds % 60;
+                
+                document.getElementById('total-time').textContent = 
+                    (totalMinutes < 10 ? '0' : '') + totalMinutes + ':' + 
+                    (totalSecs < 10 ? '0' : '') + totalSecs;
+            });
+            
+            audioPlayer.addEventListener('ended', function() {
+                // 播放结束时重置状态
+                isPlaying = false;
+                btnPlay.innerHTML = '<i class="fa fa-play"></i>';
+                vinylRecord.classList.remove('rotate-record');
+                progressBar.style.width = '0%';
+                currentTime.textContent = '00:00';
+            });
+            
+            // 显示欢迎提示
+            setTimeout(() => {
+                showNotification('点击右下角问号按钮查看如何添加音频');
+                showNotification('按F12打开控制台查看详细调试信息');
+                // 初始化音频播放器
+                console.log('Initializing audio player...');
+                console.log('Playlist:', playlist);
+                initAudioPlayer();
+            }, 1000);
+            
+            // 页面加载动画
+            gsap.from('header', { y: -50, opacity: 0, duration: 1, ease: 'power3.out' });
+            gsap.from('.logo-container', { scale: 0.5, opacity: 0, duration: 1, delay: 0.3, ease: 'back.out(1.7)' });
+            gsap.from('.glass-dark', { y: 50, opacity: 0, duration: 1, delay: 0.6, stagger: 0.2, ease: 'power3.out' });
+            gsap.from('footer', { y: 50, opacity: 0, duration: 1, delay: 1.2, ease: 'power3.out' });
+        });
+    </script>
+</body>
+</html>
