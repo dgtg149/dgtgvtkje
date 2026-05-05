@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>房屋出租告示生成器</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#4B5563',
+                        secondary: '#6B7280',
+                        accent: '#374151',
+                        background: '#F9FAFB',
+                        'preview-bg': '#FFFFFF',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .text-shadow {
+                text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+            }
+            .border-dashed-custom {
+                border-style: dashed;
+                border-width: 2px;
+                border-color: #D1D5DB;
+            }
+        }
+    </style>
+</head>
+<body class="bg-background min-h-screen p-4 md:p-8">
+    <div class="max-w-6xl mx-auto">
+        <header class="text-center mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold text-primary mb-2">房屋出租告示生成器</h1>
+            <p class="text-secondary">填写信息，生成专业的房屋出租告示，并导出为图片</p>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- 表单区域 -->
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <h2 class="text-xl font-semibold text-primary mb-4">填写信息</h2>
+                <form id="rentalForm" class="space-y-4">
+                    <div>
+                        <label for="title" class="block text-sm font-medium text-secondary mb-1">标题</label>
+                        <input type="text" id="title" name="title" value="房屋出租" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200">
+                    </div>
+                    <div>
+                        <label for="address" class="block text-sm font-medium text-secondary mb-1">地址</label>
+                        <input type="text" id="address" name="address" value="黄水莼乡路聚豪苑" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200">
+                    </div>
+                    <div>
+                        <label for="details" class="block text-sm font-medium text-secondary mb-1">详细信息</label>
+                        <textarea id="details" name="details" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200">三室一厅，四楼，水电气齐全，价格面议。</textarea>
+                    </div>
+                    <div>
+                        <label for="phone" class="block text-sm font-medium text-secondary mb-1">联系电话</label>
+                        <input type="tel" id="phone" name="phone" value="13609491631" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 pt-2">
+                        <div>
+                            <label for="widthInput" class="block text-sm font-medium text-secondary mb-1">宽度</label>
+                            <div class="flex items-center">
+                                <input type="number" id="widthInput" min="200" max="500" value="300" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200">
+                                <span class="ml-2 text-secondary">px</span>
+                            </div>
+                        </div>
+                        <div>
+                            <label for="heightInput" class="block text-sm font-medium text-secondary mb-1">高度</label>
+                             <div class="flex items-center">
+                                <input type="number" id="heightInput" min="200" max="600" value="400" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200">
+                                <span class="ml-2 text-secondary">px</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="pt-2">
+                         <button id="orientationToggle" class="w-full bg-secondary text-white py-2 px-4 rounded-md hover:bg-accent focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-secondary transition-all duration-200 flex items-center justify-center mb-2">
+                            <i class="fa fa-exchange mr-2"></i> 切换为横向
+                        </button>
+                    </div>
+                    <div class="pt-4 border-t border-gray-200">
+                        <h3 class="text-lg font-semibold text-primary mb-2">字体大小调整</h3>
+                        <div class="space-y-3">
+                            <div>
+                                <label for="titleSizeSlider" class="block text-sm font-medium text-secondary mb-1">标题</label>
+                                <input type="range" id="titleSizeSlider" min="16" max="72" value="40" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                                <div class="text-center text-xs text-secondary mt-1"><span id="titleSizeValue">40</span>px</div>
+                            </div>
+                            <div>
+                                <label for="addressSizeSlider" class="block text-sm font-medium text-secondary mb-1">地址</label>
+                                <input type="range" id="addressSizeSlider" min="12" max="36" value="18" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                                <div class="text-center text-xs text-secondary mt-1"><span id="addressSizeValue">18</span>px</div>
+                            </div>
+                            <div>
+                                <label for="detailsSizeSlider" class="block text-sm font-medium text-secondary mb-1">详细信息</label>
+                                <input type="range" id="detailsSizeSlider" min="10" max="32" value="16" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                                <div class="text-center text-xs text-secondary mt-1"><span id="detailsSizeValue">16</span>px</div>
+                            </div>
+                            <div>
+                                <label for="contactSizeSlider" class="block text-sm font-medium text-secondary mb-1">联系电话</label>
+                                <input type="range" id="contactSizeSlider" min="12" max="36" value="18" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                                <div class="text-center text-xs text-secondary mt-1"><span id="contactSizeValue">18</span>px</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="pt-2">
+                        <button type="submit" class="w-full bg-primary text-white py-2 px-4 rounded-md hover:bg-accent focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all duration-200 flex items-center justify-center">
+                            <i class="fa fa-refresh mr-2"></i> 生成告示
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- 预览和下载区域 -->
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-semibold text-primary">预览</h2>
+                    <button id="downloadBtn" class="bg-accent text-white py-2 px-4 rounded-md hover:bg-primary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all duration-200 flex items-center">
+                        <i class="fa fa-download mr-2"></i> 导出图片
+                    </button>
+                </div>
+                <div class="flex justify-center">
+                    <div id="previewContainer" class="w-[300px] h-[400px] border-dashed-custom rounded-md flex items-center justify-center p-4 bg-preview-bg relative">
+                        <div id="rentalSign" class="w-full h-full flex flex-col justify-center items-center text-center p-8">
+                            <h2 id="previewTitle" class="text-4xl font-bold text-black mb-4 text-shadow">房屋出租</h2>
+                            <p id="previewAddress" class="text-lg text-black mb-2">黄水莼乡路聚豪苑</p>
+                            <p id="previewDetails" class="text-base text-black mb-4">三室一厅，四楼，水电气齐全，价格面议。</p>
+                            <p id="previewContact" class="text-lg text-black">电话：<span id="previewPhone">13609491631</span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 当DOM加载完成后执行
+        document.addEventListener('DOMContentLoaded', function() {
+            // 获取所有需要的DOM元素
+            const widthInput = document.getElementById('widthInput');
+            const heightInput = document.getElementById('heightInput');
+            const previewContainer = document.getElementById('previewContainer');
+            const orientationToggle = document.getElementById('orientationToggle');
+            
+            const titleInput = document.getElementById('title');
+            const addressInput = document.getElementById('address');
+            const detailsInput = document.getElementById('details');
+            const phoneInput = document.getElementById('phone');
+            
+            const titleSizeSlider = document.getElementById('titleSizeSlider');
+            const addressSizeSlider = document.getElementById('addressSizeSlider');
+            const detailsSizeSlider = document.getElementById('detailsSizeSlider');
+            const contactSizeSlider = document.getElementById('contactSizeSlider');
+            
+            const titleSizeValue = document.getElementById('titleSizeValue');
+            const addressSizeValue = document.getElementById('addressSizeValue');
+            const detailsSizeValue = document.getElementById('detailsSizeValue');
+            const contactSizeValue = document.getElementById('contactSizeValue');
+            
+            const previewTitle = document.getElementById('previewTitle');
+            const previewAddress = document.getElementById('previewAddress');
+            const previewDetails = document.getElementById('previewDetails');
+            const previewContact = document.getElementById('previewContact');
+            const rentalSign = document.getElementById('rentalSign');
+            const downloadBtn = document.getElementById('downloadBtn');
+            const form = document.getElementById('rentalForm');
+
+            // 变量初始化
+            let isPortrait = true;
+
+            // 更新尺寸函数
+            function updateSize() {
+                // 获取输入值并转换为数字
+                const width = parseInt(widthInput.value, 10);
+                const height = parseInt(heightInput.value, 10);
+                
+                // 检查是否为有效数字，如果不是则使用默认值
+                const newWidth = isNaN(width) ? 300 : Math.max(200, Math.min(500, width));
+                const newHeight = isNaN(height) ? 400 : Math.max(200, Math.min(600, height));
+                
+                // 只有在值发生变化时才更新输入框，避免循环触发input事件
+                if (widthInput.value !== newWidth.toString()) {
+                    widthInput.value = newWidth;
+                }
+                if (heightInput.value !== newHeight.toString()) {
+                    heightInput.value = newHeight;
+                }
+                
+                // 更新预览容器的尺寸
+                previewContainer.style.width = newWidth + 'px';
+                previewContainer.style.height = newHeight + 'px';
+            }
+
+            // 更新文本内容函数
+            function updateContent() {
+                previewTitle.textContent = titleInput.value || '房屋出租';
+                previewAddress.textContent = addressInput.value || '地址';
+                previewDetails.textContent = detailsInput.value || '详细信息';
+                previewContact.textContent = '电话：' + (phoneInput.value || '联系电话');
+            }
+
+            // 更新字体大小函数
+            function updateFontSizes() {
+                const titleSize = titleSizeSlider.value;
+                const addressSize = addressSizeSlider.value;
+                const detailsSize = detailsSizeSlider.value;
+                const contactSize = contactSizeSlider.value;
+                
+                previewTitle.style.fontSize = titleSize + 'px';
+                previewAddress.style.fontSize = addressSize + 'px';
+                previewDetails.style.fontSize = detailsSize + 'px';
+                previewContact.style.fontSize = contactSize + 'px';
+                
+                titleSizeValue.textContent = titleSize;
+                addressSizeValue.textContent = addressSize;
+                detailsSizeValue.textContent = detailsSize;
+                contactSizeValue.textContent = contactSize;
+            }
+
+            // 切换横竖屏函数
+            function toggleOrientation() {
+                const width = widthInput.value;
+                const height = heightInput.value;
+                widthInput.value = height;
+                heightInput.value = width;
+                isPortrait = !isPortrait;
+                orientationToggle.innerHTML = isPortrait ? 
+                    '<i class="fa fa-exchange mr-2"></i> 切换为横向' : 
+                    '<i class="fa fa-exchange mr-2"></i> 切换为竖向';
+                updateSize();
+            }
+
+            // 导出图片函数
+            function exportImage() {
+                html2canvas(rentalSign, {
+                    backgroundColor: '#FFFFFF',
+                    scale: 2
+                }).then(function(canvas) {
+                    const link = document.createElement('a');
+                    link.download = '房屋出租告示_' + Date.now() + '.png';
+                    link.href = canvas.toDataURL();
+                    link.click();
+                });
+            }
+
+            // 表单提交处理函数
+            function handleSubmit(e) {
+                e.preventDefault();
+                updateContent();
+                
+                const btn = this.querySelector('button[type="submit"]');
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<i class="fa fa-check mr-2"></i> 已更新';
+                btn.disabled = true;
+                btn.classList.add('bg-green-600');
+                
+                setTimeout(function() {
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                    btn.classList.remove('bg-green-600');
+                }, 1500);
+            }
+
+            // 添加事件监听器
+            widthInput.addEventListener('change', updateSize);
+            heightInput.addEventListener('change', updateSize);
+            orientationToggle.addEventListener('click', toggleOrientation);
+            
+            titleInput.addEventListener('input', updateContent);
+            addressInput.addEventListener('input', updateContent);
+            detailsInput.addEventListener('input', updateContent);
+            phoneInput.addEventListener('input', updateContent);
+            
+            titleSizeSlider.addEventListener('input', updateFontSizes);
+            addressSizeSlider.addEventListener('input', updateFontSizes);
+            detailsSizeSlider.addEventListener('input', updateFontSizes);
+            contactSizeSlider.addEventListener('input', updateFontSizes);
+            
+            downloadBtn.addEventListener('click', exportImage);
+            form.addEventListener('submit', handleSubmit);
+
+            // 初始化页面
+            updateSize();
+            updateContent();
+            updateFontSizes();
+        });
+    </script>
+</body>
+</html>
