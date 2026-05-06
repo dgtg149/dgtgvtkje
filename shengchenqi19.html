@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
+<title>小广告生成器</title>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<style>
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+}
+body {
+  background:#f1f1f1;
+  padding:12px;
+  font-family:sans-serif;
+}
+.box {
+  background:#fff;
+  border-radius:10px;
+  padding:14px;
+  margin-bottom:12px;
+}
+input, textarea {
+  width:100%;
+  padding:9px;
+  margin:5px 0;
+  border:1px solid #ddd;
+  border-radius:6px;
+  font-size:15px;
+}
+.btn-row {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  margin:8px 0;
+}
+button {
+  padding:10px;
+  border:none;
+  border-radius:6px;
+  color:#fff;
+  font-size:15px;
+}
+.b1{background:#006ce8;}
+.b2{background:#666;}
+.b3{background:#ff7a00;}
+
+.preview-box{
+  width:100%;
+  text-align:center;
+  background:#f9f9f9;
+  border-radius:8px;
+  padding:10px;
+}
+#preImg{
+  max-width:100%;
+  touch-action:pinch-zoom;
+}
+</style>
+</head>
+<body>
+
+<div class="box">
+  <input type="text" id="t1" value="房屋出租">
+  <input type="text" id="t2" value="黄水莼乡路聚豪苑">
+  <textarea id="t3" rows="3">三室一厅，四楼，水电气齐全，价格面议。</textarea>
+  <input type="text" id="t4" value="13609491631">
+
+  <div class="btn-row">
+    <button class="b1" onclick="setA4()">A4横向</button>
+    <button class="b2" onclick="swapSize()">切换横竖</button>
+  </div>
+  <div class="btn-row">
+    <button class="b3" onclick="moveUp()">⬆ 整体上移</button>
+    <button class="b3" onclick="moveDown()">⬇ 整体下移</button>
+  </div>
+
+  <div style="margin:8px 0;">
+    <label>标题大小</label>
+    <input type="range" id="s1" min="30" max="220" value="90">
+    <label>地址大小</label>
+    <input type="range" id="s2" min="20" max="130" value="50">
+    <label>内容大小</label>
+    <input type="range" id="s3" min="15" max="100" value="38">
+    <label>电话大小</label>
+    <input type="range" id="s4" min="20" max="130" value="50">
+  </div>
+</div>
+
+<div class="box">
+  <p style="font-size:14px;color:#666;margin-bottom:8px;text-align:center;">
+  预览图｜长按可保存
+  </p>
+  <div class="preview-box">
+    <img id="preImg" alt="预览图">
+  </div>
+</div>
+
+<div id="paper" style="position:absolute;left:-9999px;width:1123px;height:794px;background:#fff;padding:30px;text-align:center;"></div>
+
+<script>
+let offsetY = 0;
+let paperW = 1123;
+let paperH = 794;
+const paper = document.getElementById('paper');
+const preImg = document.getElementById('preImg');
+
+function render(){
+  paper.style.width = paperW + 'px';
+  paper.style.height = paperH + 'px';
+
+  let t1 = document.getElementById('t1').value;
+  let t2 = document.getElementById('t2').value;
+  let t3 = document.getElementById('t3').value;
+  let t4 = document.getElementById('t4').value;
+
+  let s1 = document.getElementById('s1').value;
+  let s2 = document.getElementById('s2').value;
+  let s3 = document.getElementById('s3').value;
+  let s4 = document.getElementById('s4').value;
+
+  paper.innerHTML = `
+    <div style="margin-top:${offsetY}px;">
+      <div style="font-size:${s1}px;font-weight:bold;margin-bottom:20px;">${t1}</div>
+      <div style="font-size:${s2}px;margin-bottom:16px;">${t2}</div>
+      <div style="font-size:${s3}px;margin-bottom:16px;white-space:pre-line;">${t3}</div>
+      <div style="font-size:${s4}px;font-weight:bold;">${t4}</div>
+    </div>
+  `;
+
+  html2canvas(paper,{backgroundColor:'#fff',scale:2}).then(canvas=>{
+    preImg.src = canvas.toDataURL('image/png');
+  });
+}
+
+document.querySelectorAll('input,textarea').forEach(el=>{
+  el.addEventListener('input',render);
+});
+
+function moveUp(){ offsetY -= 20; render(); }
+function moveDown(){ offsetY += 20; render(); }
+
+function setA4(){
+  paperW = 1123;
+  paperH = 794;
+  offsetY = 0;
+  render();
+}
+function swapSize(){
+  let tmp = paperW;
+  paperW = paperH;
+  paperH = tmp;
+  render();
+}
+
+render();
+</script>
+</body>
+</html>
