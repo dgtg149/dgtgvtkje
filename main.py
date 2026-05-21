@@ -1,4 +1,4 @@
- from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException
   from fastapi.middleware.cors import CORSMiddleware
   from fastapi.responses import HTMLResponse
   from pydantic import BaseModel
@@ -45,95 +45,118 @@
 
   @app.get("/", response_class=HTMLResponse)
   async def home():
-      return """
-      <!DOCTYPE html>
-      <html lang="zh-CN">
-      <head>
-          <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">      
-          <title>体育赛事分析</title>
-          <style>
-              body { font-family: Arial; background: linear-gradient(135deg, #667eea  
-  0%, #764ba2 100%); min-height: 100vh; display: flex; align-items: center;
-  justify-content: center; padding: 20px; }
-              .container { background: white; border-radius: 20px; padding: 40px;     
-  max-width: 600px; width: 100%; }
-              h1 { text-align: center; color: #333; }
-              .form-group { margin-bottom: 20px; }
-              label { display: block; margin-bottom: 8px; color: #555; }
-              input, select { width: 100%; padding: 12px; border: 2px solid #e0e0e0;  
-  border-radius: 10px; font-size: 16px; }
-              button { width: 100%; padding: 15px; background: #667eea; color: white; 
-  border: none; border-radius: 10px; font-size: 18px; cursor: pointer; }
-              .result { margin-top: 30px; padding: 20px; background: #f8f9fa;
-  border-radius: 10px; display: none; }
-              .result.show { display: block; }
-              .prediction { display: flex; justify-content: space-around; margin: 20px   0; }
-              .pred-item { text-align: center; }
-              .pred-value { font-size: 32px; font-weight: bold; color: #667eea; }     
-              .pred-label { font-size: 14px; color: #666; margin-top: 5px; }
-          </style>
-      </head>
-      <body>
-          <div class="container">
-              <h1>⚽  体育赛事分析</h1>
-              <div class="form-group">
-                  <label>运动类型</label>
-                  <select id="sport"><option value="football">足球</option><option    
-  value="basketball">篮球</option></select>
-              </div>
-              <div class="form-group">
-                  <label>主队</label>
-                  <input type="text" id="homeTeam" placeholder="例如：曼城">
-              </div>
-              <div class="form-group">
-                  <label>客队</label>
-                  <input type="text" id="awayTeam" placeholder="例如：利物浦">        
-              </div>
-              <button onclick="analyze()">开始分析</button>
-              <div class="result" id="result">
-                  <h3 id="matchTitle"></h3>
-                  <div class="prediction">
-                      <div class="pred-item"><div class="pred-value"
-  id="homeWin">--</div><div class="pred-label">主胜</div></div>
-                      <div class="pred-item"><div class="pred-value"
-  id="draw">--</div><div class="pred-label">平局</div></div>
-                      <div class="pred-item"><div class="pred-value"
-  id="awayWin">--</div><div class="pred-label">客胜</div></div>
-                  </div>
-              </div>
-          </div>
-          <script>
-              async function analyze() {
-                  const homeTeam = document.getElementById('homeTeam').value.trim();  
-                  const awayTeam = document.getElementById('awayTeam').value.trim();  
-                  const sport = document.getElementById('sport').value;
-                  if (!homeTeam || !awayTeam) { alert('请输入球队名称'); return; }    
-                  try {
-                      const response = await fetch('/analyze', {
-                          method: 'POST',
-                          headers: {'Content-Type': 'application/json'},
-                          body: JSON.stringify({ sport: sport, home_team: homeTeam,   
-  away_team: awayTeam })
-                      });
-                      const data = await response.json();
-                      if (data.success) {
-                          document.getElementById('matchTitle').textContent =
-  data.match_info.home_team + ' vs ' + data.match_info.away_team;
-                          document.getElementById('homeWin').textContent =
-  (data.prediction.home_win * 100).toFixed(1) + '%';
-                          document.getElementById('draw').textContent =
-  (data.prediction.draw * 100).toFixed(1) + '%';
-                          document.getElementById('awayWin').textContent =
-  (data.prediction.away_win * 100).toFixed(1) + '%';
-                          document.getElementById('result').classList.add('show');    
-                      }
-                  } catch (error) { alert('分析失败'); }
-              }
-          </script>
-      </body>
-      </html>
-      """
+      return """<!DOCTYPE html>
+  <html lang="zh-CN">
+  <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>体育赛事分析</title>
+  <style>
+  body{font-family:Arial;background:linear-gradient(135deg,#667eea 0%,#764ba2
+  100%);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;margin:0}
+  .container{background:white;border-radius:20px;padding:40px;max-width:600px;width:100%;box-shadow:0 10px 40px 
+  rgba(0,0,0,0.1)}
+  h1{text-align:center;color:#333;margin-bottom:30px}
+  .form-group{margin-bottom:20px}
+  label{display:block;margin-bottom:8px;color:#555;font-weight:500}
+  input,select{width:100%;padding:12px;border:2px solid
+  #e0e0e0;border-radius:10px;font-size:16px;box-sizing:border-box}
+  input:focus,select:focus{outline:none;border-color:#667eea}
+  button{width:100%;padding:15px;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;border:n  one;border-radius:10px;font-size:18px;font-weight:600;cursor:pointer;margin-top:10px}
+  button:hover{opacity:0.9;transform:translateY(-1px)}
+  .result{margin-top:30px;padding:20px;background:#f8f9fa;border-radius:10px;display:none}
+  .result.show{display:block}
+  .prediction{display:flex;justify-content:space-around;margin:20px 0}
+  .pred-item{text-align:center;flex:1}
+  .pred-value{font-size:32px;font-weight:bold;color:#667eea}
+  .pred-label{font-size:14px;color:#666;margin-top:5px}
+  .note{margin-top:20px;padding:15px;background:#fff3cd;border-radius:10px;font-size:14px;color:#856404}        
+  </style>
+  </head>
+  <body>
+  <div class="container">
+  <h1>⚽  体育赛事分析</h1>
+  <div class="form-group">
+  <label>运动类型</label>
+  <select id="sport">
+  <option value="football">足球</option>
+  <option value="basketball">篮球</option>
+  </select>
+  </div>
+  <div class="form-group">
+  <label>主队名称</label>
+  <input type="text" id="homeTeam" placeholder="例如：曼城">
+  </div>
+  <div class="form-group">
+  <label>客队名称</label>
+  <input type="text" id="awayTeam" placeholder="例如：利物浦">
+  </div>
+  <button onclick="analyze()">🔍 开始分析</button>
+  <div class="result" id="result">
+  <h3 id="matchTitle" style="text-align:center;margin-bottom:20px"></h3>
+  <div class="prediction">
+  <div class="pred-item">
+  <div class="pred-value" id="homeWin">--</div>
+  <div class="pred-label">主胜概率</div>
+  </div>
+  <div class="pred-item">
+  <div class="pred-value" id="draw">--</div>
+  <div class="pred-label">平局概率</div>
+  </div>
+  <div class="pred-item">
+  <div class="pred-value" id="awayWin">--</div>
+  <div class="pred-label">客胜概率</div>
+  </div>
+  </div>
+  <div id="analysisText" style="margin-top:15px;padding:10px;background:#e9ecef;border-radius:8px"></div>       
+  </div>
+  <div class="note">
+  💡 免费在线分析服务 | 支持足球、篮球等赛事
+  </div>
+  </div>
+  <script>
+  async function analyze(){
+  const homeTeam=document.getElementById('homeTeam').value.trim();
+  const awayTeam=document.getElementById('awayTeam').value.trim();
+  const sport=document.getElementById('sport').value;
+
+  if(!homeTeam||!awayTeam){
+  alert('请输入球队名称');
+  return;
+  }
+
+  document.getElementById('result').classList.remove('show');
+
+  try{
+  const response=await fetch('/analyze',{
+  method:'POST',
+  headers:{'Content-Type':'application/json'},
+  body:JSON.stringify({
+  sport:sport,
+  home_team:homeTeam,
+  away_team:awayTeam
+  })
+  });
+
+  const data=await response.json();
+
+  if(data.success){
+  document.getElementById('matchTitle').textContent=data.match_info.home_team+' VS '+data.match_info.away_team; 
+  document.getElementById('homeWin').textContent=(data.prediction.home_win*100).toFixed(1)+'%';
+  document.getElementById('draw').textContent=(data.prediction.draw*100).toFixed(1)+'%';
+  document.getElementById('awayWin').textContent=(data.prediction.away_win*100).toFixed(1)+'%';
+  document.getElementById('analysisText').innerHTML='<strong>置信度：</strong>'+data.prediction.confidence+'<br>  <strong>建议：</strong>'+(data.prediction.home_win>0.4?'主队略占优势':'双方实力接近');
+  document.getElementById('result').classList.add('show');
+  }else{
+  alert('分析失败，请重试');
+  }
+  }catch(error){
+  alert('网络错误，请重试');
+  }
+  }
+  </script>
+  </body>
+  </html>"""
 
   @app.get("/health")
   async def health():
@@ -147,7 +170,7 @@
           away_win = 1 - home_win - draw
 
           max_prob = max(home_win, draw, away_win)
-          confidence = "高" if max_prob > 0.5 else "中" if max_prob > 0.4 else "低"   
+          confidence = "高" if max_prob > 0.5 else "中" if max_prob > 0.4 else "低"
 
           prediction = Prediction(
               home_win=round(home_win, 3),
@@ -168,15 +191,15 @@
   {"主队略占优势" if home_win > 0.4 else "双方实力接近"}
 
   ---
-  Powered by Render.com"""
+  数据来源：智能分析引擎"""
 
           return AnalysisResponse(
               success=True,
               match_info=MatchInfo(
-                  competition=request.competition or "未知",
+                  competition=request.competition or "未知联赛",
                   home_team=request.home_team,
                   away_team=request.away_team,
-                  date=request.match_date or datetime.now().strftime("%Y-%m-%d")      
+                  date=request.match_date or datetime.now().strftime("%Y-%m-%d")
               ),
               prediction=prediction,
               report=report,
